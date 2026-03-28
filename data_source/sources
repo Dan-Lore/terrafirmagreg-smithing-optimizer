@@ -1,0 +1,5 @@
+# id	sortIndex	подпись в UI (источник)	точная строка заголовка секции, как в materials_suffixes.txt
+ingot	10	Слиток	Ingot / Слиток:
+rod	20	Стержень	Rod / Стержень:
+double_ingot	30	Двойной слиток	Double Ingot / Двойной слиток:
+plate	40	Пластина	Plate / Пластина:

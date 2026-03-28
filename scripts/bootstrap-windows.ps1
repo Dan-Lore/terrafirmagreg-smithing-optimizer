@@ -40,7 +40,7 @@ if (-not $projectDir) {
     throw "Не удалось найти папку проекта после распаковки."
 }
 
-Write-Host "[5/6] Установка зависимостей..."
+Write-Host "[5/7] Установка зависимостей..."
 Push-Location $projectDir.FullName
 try {
     npm install
@@ -48,7 +48,13 @@ try {
         throw "Ошибка npm install."
     }
 
-    Write-Host "[6/6] Запуск dev-сервера..."
+    Write-Host "[6/7] Генерация smithing-data из data_source..."
+    npm run generate-smithing
+    if ($LASTEXITCODE -ne 0) {
+        throw "Ошибка npm run generate-smithing."
+    }
+
+    Write-Host "[7/7] Запуск dev-сервера..."
     Write-Host "Откройте в браузере: http://localhost:5173/"
     npm run dev -- --host 0.0.0.0
 }

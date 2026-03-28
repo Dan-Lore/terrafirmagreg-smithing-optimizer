@@ -1,0 +1,33 @@
+Ingot / Слиток:
+Scythe Head / Оголовье косы = 97
+Chain / Цепь = 41
+Small Gear / Маленькая шестерня = 72
+Hoe Head / Оголовье мотыги = 45
+Unfinished Lamp / Недоделанный фонарь = 58
+Chisel Head / Головка зубила = 57
+Fish hook / Крючок = 43
+Tongs Part / Часть клещей = 99
+Bars / Прутья = 57
+Mattock Head / Оголовье кайла = 61
+File Head / Оголовье напильника = 79
+Nugget / Самородок = 50
+Rod / Стержень = 43
+Axe Head / Оголовье топора = 51
+Bars with Plate / Прутья с панелью = 99
+Javelin / Наконечник копья = 110
+Shovel Head / Оголовье лопаты = 108
+Pickaxe Head / Оголовье кирки = 100
+Screwdriver Tip / Наконечник отвёртки = 109
+Saw Blade / Оголовье пилы = 81
+Knife Head / Оголовье ножа = 107
+Butchery Knife Head / Оголовье тесака = 41
+Prospector Pick Head / Головка геологического молотка = 75
+Hammer Head / Оголовье молота = 103
+
+Rod / Стержень:
+Ring / Кольцо = 111
+Bolt / Болт = 89
+Screw / Винт = 72
+
+Double Ingot / Двойной слиток:
+

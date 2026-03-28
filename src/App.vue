@@ -1,99 +1,197 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { MAX_G, MIN_G } from './lib/commands'
-import { PATHS } from './generated/paths'
+import { computed } from 'vue'
+import ForgeResultPanel from './components/ForgeResultPanel.vue'
+import { useForgeApp } from './composables/useForgeApp'
+import { DATA_SOURCE_DIR, NPM_GENERATE_SMITHING } from './lib/forgeUiCopy'
 
-const gInput = ref<string>('0')
+const {
+  materials,
+  sources,
+  selectedMaterialId,
+  selectedSourceId,
+  itemList,
+  selectedItemId,
+  forgeMode,
+  startValueInput,
+  endValueInput,
+  assetUrl,
+  TITLE_VALUE_ONLY_MATERIAL,
+  TITLE_VALUE_ONLY_START,
+  TITLE_ANY_TO_G_FILTERS,
+  forgeResultPanelModel,
+} = useForgeApp()
 
-const parsedG = computed(() => {
-  const trimmed = gInput.value.trim()
-  if (trimmed.length === 0) return { ok: false as const, reason: 'empty' as const }
-  const n = Number(trimmed)
-  if (!Number.isFinite(n)) return { ok: false as const, reason: 'nan' as const }
-  if (!Number.isInteger(n)) return { ok: false as const, reason: 'notInt' as const }
-  if (n < MIN_G || n > MAX_G) return { ok: false as const, reason: 'outOfRange' as const, n }
-  return { ok: true as const, n }
-})
-
-const result = computed(() => {
-  if (!parsedG.value.ok) return null
-  return PATHS[parsedG.value.n] ?? null
-})
-
-function formatMove(delta: number) {
-  return delta >= 0 ? `+${delta}` : `${delta}`
-}
+const modeAnyToG = computed(() => forgeMode.value === 'anyToG')
+const modeMark = computed(() => forgeMode.value === 'mark')
+const materialLocked = computed(() => modeMark.value || modeAnyToG.value)
+const sourceLocked = computed(() => modeAnyToG.value)
+const itemSelectLocked = computed(() => modeAnyToG.value || itemList.value.length === 0)
+const titleMaterialGroup = computed(() =>
+  modeAnyToG.value ? TITLE_ANY_TO_G_FILTERS : modeMark.value ? TITLE_VALUE_ONLY_MATERIAL : undefined,
+)
+const titleWhenAnyToG = computed(() => (modeAnyToG.value ? TITLE_ANY_TO_G_FILTERS : undefined))
 </script>
 
 <template>
   <main class="page">
     <section class="card">
       <header class="header">
-        <h1 class="title">Точка G</h1>
+        <h1 class="title">Ковка — точка G</h1>
         <p class="subtitle">
-          Минимальная последовательность команд, чтобы из <b>0</b> попасть в <b>G</b> не выходя за
-          диапазон <b>0..150</b>.
+          Те же команды и ограничение <b>0..150</b> на каждом шаге. Полная ковка: кратчайший префикс до состояния перед
+          суффиксом, затем <b>суффикс предмета</b>. Данные в <code class="inlineHint">{{ DATA_SOURCE_DIR }}</code> (английский ключ /
+          русская подпись) → <code class="inlineHint">{{ NPM_GENERATE_SMITHING }}</code>.
         </p>
       </header>
 
-      <div class="form">
-        <label class="label" for="g">Целевая точка G (0..150)</label>
-        <div class="row">
-          <input
-            id="g"
-            v-model="gInput"
-            inputmode="numeric"
-            class="input"
-            placeholder="Например: 42"
-            aria-describedby="g-help"
-          />
-          <span class="badge">команд: 8</span>
+      <div class="filters">
+        <div class="filterBlock">
+          <div class="filterLabel">Режим ковки</div>
+          <div class="modeInline" role="group" aria-label="Режим ковки">
+            <label
+              class="filterTile filterTile--mode"
+              :class="{ active: modeAnyToG }"
+            >
+              <input v-model="forgeMode" type="radio" class="tileRadio" value="anyToG" />
+              <span>Из любой точки в точку G</span>
+            </label>
+            <label
+              class="filterTile filterTile--mode"
+              :class="{ active: modeMark }"
+            >
+              <input v-model="forgeMode" type="radio" class="tileRadio" value="mark" />
+              <span>Из точки G в предмет</span>
+            </label>
+            <label
+              class="filterTile filterTile--mode"
+              :class="{ active: forgeMode === 'value' }"
+            >
+              <input v-model="forgeMode" type="radio" class="tileRadio" value="value" />
+              <span>Из любой точки в предмет</span>
+            </label>
+            <div
+              class="filterTile filterTile--start"
+              :class="{ filterTileMuted: modeMark }"
+              :title="modeMark ? TITLE_VALUE_ONLY_START : undefined"
+            >
+              <label class="startLabel" for="startVal">Старт (0..150)</label>
+              <input
+                id="startVal"
+                v-model="startValueInput"
+                class="startInput"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                :disabled="modeMark"
+                :aria-disabled="modeMark"
+              />
+            </div>
+            <div
+              v-show="modeAnyToG"
+              class="filterTile filterTile--start"
+            >
+              <label class="startLabel" for="endVal">Цель G (0..150)</label>
+              <input
+                id="endVal"
+                v-model="endValueInput"
+                class="startInput"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+              />
+            </div>
+          </div>
+          <p v-if="modeAnyToG" class="modeHint" aria-live="polite">
+            Кратчайший путь в графе <b>0..150</b> от «Старт» до «Цель G». Предмет и суффикс не используются.
+          </p>
+          <p v-else-if="modeMark" class="modeHint" aria-live="polite">
+            Префикс стартует от <b>G</b> выбранного рецепта, затем суффикс предмета.
+          </p>
+          <p v-else class="modeHint" aria-live="polite">
+            Префикс от числа в поле «Старт» (по умолчанию <b>0</b>) до состояния перед суффиксом, затем суффикс предмета.
+            Можно сменить материал и источник.
+          </p>
         </div>
-        <div id="g-help" class="help">
-          Доступные команды: +2, +7, +13, +16, -3, -6, -9, -15
+
+        <div class="filterBlock">
+          <div class="filterLabel">Материал</div>
+          <div
+            class="tileRow"
+            role="group"
+            aria-label="Материал"
+            :title="titleMaterialGroup"
+          >
+            <button
+              v-for="m in materials"
+              :key="m.id"
+              type="button"
+              class="filterTile filterTile--material"
+              :class="{
+                active: selectedMaterialId === m.id,
+                filterTileMuted: materialLocked,
+              }"
+              :disabled="materialLocked"
+              :aria-disabled="materialLocked"
+              @click="selectedMaterialId = m.id"
+            >
+              <img class="tileIcon" :src="assetUrl(m.icon)" width="28" height="28" alt="" />
+              <span>{{ m.label }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="filterBlock">
+          <div class="filterLabel">Из чего куём</div>
+          <div
+            class="tileRow"
+            :title="titleWhenAnyToG"
+          >
+            <button
+              v-for="s in sources"
+              :key="s.id"
+              type="button"
+              class="filterTile filterTile--source"
+              :class="{ active: selectedSourceId === s.id, filterTileMuted: sourceLocked }"
+              :disabled="sourceLocked"
+              :aria-disabled="sourceLocked"
+              @click="selectedSourceId = s.id"
+            >
+              {{ s.label }}
+            </button>
+          </div>
+        </div>
+
+        <div class="filterBlock">
+          <div class="filterLabel">Что куём</div>
+          <div
+            class="selectShell"
+            :class="{ filterTileMuted: modeAnyToG }"
+            :title="titleWhenAnyToG"
+          >
+            <select
+              id="item"
+              v-model="selectedItemId"
+              class="filterTile filterSelect"
+              :disabled="itemSelectLocked"
+              :aria-disabled="itemSelectLocked"
+            >
+              <option v-if="itemList.length === 0" value="" disabled>Нет предметов для этой пары</option>
+              <option v-for="it in itemList" :key="it.id" :value="it.id">
+                {{ it.label }}
+              </option>
+            </select>
+          </div>
         </div>
       </div>
 
-      <section class="result" aria-live="polite">
-        <template v-if="!parsedG.ok">
-          <p class="muted" v-if="parsedG.reason === 'empty'">Введите целое число.</p>
-          <p class="muted" v-else-if="parsedG.reason === 'nan'">Это не похоже на число.</p>
-          <p class="muted" v-else-if="parsedG.reason === 'notInt'">Нужно целое число.</p>
-          <p class="muted" v-else>G должно быть в диапазоне 0..150.</p>
-        </template>
-
-        <template v-else>
-          <template v-if="result === null">
-            <p class="muted">
-              Для G={{ parsedG.n }} решения нет при ограничении на диапазон 0..150.
-            </p>
-          </template>
-          <template v-else>
-            <div class="summary">
-              <div class="pill">
-                Минимум шагов: <b>{{ result.steps }}</b>
-              </div>
-              <div class="pill ok">
-                Достижимо: <b>да</b>
-              </div>
-            </div>
-
-            <div class="sequence">
-              <div class="seqTitle">Последовательность команд</div>
-              <code class="seqCode">
-                <span v-if="result.moves.length === 0">— (уже в 0)</span>
-                <span v-else>
-                  {{ result.moves.map(formatMove).join(', ') }}
-                </span>
-              </code>
-            </div>
-          </template>
-        </template>
-      </section>
+      <ForgeResultPanel :model="forgeResultPanelModel" />
     </section>
 
     <footer class="footer">
-      <span class="muted">Данные предвычислены одним запуском скрипта и сохранены в проекте.</span>
+      <span class="muted">
+        Данные ковки: <code class="inlineHint">{{ DATA_SOURCE_DIR }}</code> → <code class="inlineHint">{{ NPM_GENERATE_SMITHING }}</code>
+        · префикс — BFS в графе 0..150; таблица <code class="inlineHint">paths.ts</code> (после <code class="inlineHint">npm run precompute</code>) сверяется с BFS в тестах.
+      </span>
     </footer>
   </main>
 </template>
@@ -108,7 +206,7 @@ function formatMove(delta: number) {
 }
 
 .card {
-  width: min(860px, 100%);
+  width: min(920px, 100%);
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 18px;
@@ -134,105 +232,174 @@ function formatMove(delta: number) {
   color: var(--muted);
 }
 
-.form {
+.filters {
+  display: grid;
+  gap: 16px;
+}
+
+.filterBlock {
   display: grid;
   gap: 8px;
 }
 
-.label {
-  font-weight: 600;
+.filterLabel {
+  font-weight: 650;
+  font-size: 13px;
+  color: var(--muted);
 }
 
-.row {
+.inlineHint {
+  font-size: 0.92em;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border);
+}
+
+.tileRow {
   display: flex;
-  gap: 10px;
-  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: stretch;
 }
 
-.input {
-  flex: 1;
-  height: 44px;
-  padding: 0 14px;
+.modeInline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: stretch;
+  min-height: 46px;
+}
+
+.filterTile {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  min-height: 44px;
+  box-sizing: border-box;
   border-radius: 12px;
   border: 1px solid var(--border);
   background: rgba(0, 0, 0, 0.28);
   color: var(--text);
-  outline: none;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
 
-.input:focus {
+.filterTile.active {
   border-color: rgba(124, 58, 237, 0.7);
-  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.18);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18);
 }
 
-.badge {
+.filterTileMuted,
+.filterTile:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.filterTile--mode {
+  cursor: pointer;
   user-select: none;
-  border-radius: 999px;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  color: var(--muted);
-  font-size: 12px;
 }
 
-.help {
+.filterTile--start {
+  gap: 10px;
+  flex: 1 1 160px;
+  min-width: min(220px, 100%);
+  cursor: default;
+}
+
+.filterTile--material {
+  border-radius: 12px;
+}
+
+.tileIcon {
+  border-radius: 8px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.tileRadio {
+  margin: 0;
+  accent-color: #7c3aed;
+}
+
+.startLabel {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.startInput {
+  width: 72px;
+  min-width: 0;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--text);
+  font: inherit;
+}
+
+.startInput:focus:not(:disabled) {
+  outline: none;
+  border-color: rgba(124, 58, 237, 0.75);
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+}
+
+.startInput:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.selectShell {
+  max-width: 100%;
+}
+
+.filterSelect {
+  width: 100%;
+  max-width: 520px;
+  display: block;
+  cursor: pointer;
+  appearance: none;
+  padding-right: 36px;
+  background-color: rgba(0, 0, 0, 0.28);
+  background-image: linear-gradient(45deg, transparent 50%, rgba(255, 255, 255, 0.5) 50%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.5) 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(50% - 3px), calc(100% - 12px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: rgba(124, 58, 237, 0.75);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18);
+}
+
+.filterSelect option {
+  background: #0f172a;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.modeHint {
+  margin: 6px 0 0;
   color: var(--muted);
   font-size: 13px;
-}
-
-.result {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-  display: grid;
-  gap: 14px;
+  line-height: 1.45;
 }
 
 .muted {
   color: var(--muted);
-  margin: 0;
-}
-
-.summary {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.pill {
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.22);
-}
-
-.pill.ok {
-  border-color: rgba(34, 197, 94, 0.45);
-}
-
-.sequence {
-  display: grid;
-  gap: 8px;
-}
-
-.seqTitle {
-  font-weight: 600;
-}
-
-.seqCode {
-  display: block;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  background: rgba(0, 0, 0, 0.28);
-  white-space: pre-wrap;
-  word-break: break-word;
 }
 
 .footer {
-  width: min(860px, 100%);
+  width: min(920px, 100%);
   display: flex;
   justify-content: center;
   padding: 8px 4px;
 }
 </style>
-

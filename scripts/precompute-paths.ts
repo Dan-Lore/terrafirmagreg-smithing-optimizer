@@ -36,7 +36,7 @@ function precomputeAllPaths(): PathEntry[] {
     }
 
     const moves: number[] = []
-    let cur = g
+    let cur: number = g
     while (cur !== 0) {
       const d = move[cur]!
       moves.push(d)
