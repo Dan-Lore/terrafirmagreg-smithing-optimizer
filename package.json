@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "generate-smithing": "tsx scripts/generate-smithing-data.ts",
+    "generate-g-points-template": "tsx scripts/generate-g-points-template.ts",
     "build": "npm run generate-smithing && vite build",
     "preview": "vite preview",
     "precompute": "tsx scripts/precompute-paths.ts",
