@@ -33,7 +33,12 @@ export default tseslint.config(
     },
   },
   {
-    files: ['scripts/**/*.ts', 'vite.config.ts', 'src/lib/buildSmithingDatasetFromDataSource.ts'],
+    files: [
+      'scripts/**/*.ts',
+      'vite.config.ts',
+      'src/lib/buildSmithingDatasetFromDataSource.ts',
+      'src/lib/readRepoUtf8.ts',
+    ],
     languageOptions: {
       globals: globals.node,
     },

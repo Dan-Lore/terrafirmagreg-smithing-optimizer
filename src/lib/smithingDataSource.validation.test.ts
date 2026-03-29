@@ -1,13 +1,11 @@
-import { resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
   buildSmithingDatasetFromDataSource,
   formatSmithingIssuesForAssert,
 } from './buildSmithingDatasetFromDataSource'
+import { getDataSourceDir } from './test/dataSourcePaths'
 
-const projectRoot = resolve(fileURLToPath(new URL('.', import.meta.url)), '..', '..')
-const dataSourceDir = resolve(projectRoot, 'data_source')
+const dataSourceDir = getDataSourceDir()
 
 describe('data_source: валидация состава', () => {
   it('нет ошибок severity error (заголовки ↔ sources, G ↔ суффиксы, G в 0..150, непустой итог)', () => {

@@ -3,7 +3,6 @@
  * Ошибки (severity: error): некорректный состав (заголовки, G без строки в суффиксах, G вне 0..150, пустой итог).
  * Строка суффикса без ни одного G в материалах не считается ошибкой — предмет просто не попадёт в UI.
  */
-import { readdirSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import type { SmithingConfig } from '../config/smithing.types'
 import type { SourceManifestRow, SuffixEntry } from './smithingDataParse'
@@ -17,6 +16,7 @@ import {
   slugEn,
   stableItemId,
 } from './smithingDataParse'
+import { readDirOrThrow, readUtf8OrThrow } from './readRepoUtf8'
 
 export const SMITHING_DATA_FILES = {
   suffix: 'materials_suffixes.txt',
@@ -80,24 +80,6 @@ function addIssue(
   line?: number,
 ): void {
   issues.push({ severity, code, file, message, line })
-}
-
-function readUtf8OrThrow(absPath: string, label: string): string {
-  try {
-    return readFileSync(absPath, 'utf8')
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
-    throw new Error(`data_source: не удалось прочитать «${label}» (${absPath}): ${msg}`)
-  }
-}
-
-function readDirOrThrow(absPath: string): string[] {
-  try {
-    return readdirSync(absPath)
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
-    throw new Error(`data_source: не удалось прочитать каталог (${absPath}): ${msg}`)
-  }
 }
 
 /**

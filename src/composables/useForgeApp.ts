@@ -12,6 +12,7 @@ import {
   sortedMaterials,
   sortedSources,
 } from '../config/smithing.config'
+import { formatForgeMove } from '../lib/formatForgeMove'
 import type { ForgeResultPanelModel } from '../types/forgeResultPanelModel'
 
 export function useForgeApp() {
@@ -92,14 +93,10 @@ export function useForgeApp() {
     }),
   )
 
-  function formatMove(delta: number) {
-    return delta >= 0 ? `+${delta}` : `${delta}`
-  }
-
   const suffixFormatted = computed(() => {
     const s = selectedSuffix.value
     if (s === null || s.length === 0) return null
-    return s.map(formatMove).join(', ')
+    return s.map(formatForgeMove).join(', ')
   })
 
   const forgeResultPanelModel = computed(
@@ -109,7 +106,7 @@ export function useForgeApp() {
       goalG: goalG.value,
       suffix: selectedSuffix.value,
       suffixFormatted: suffixFormatted.value,
-      formatMove,
+      formatMove: formatForgeMove,
       selection: {
         material: selectedMaterial.value,
         sourceId: selectedSourceId.value,

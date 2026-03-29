@@ -17,12 +17,16 @@ import { GENERATED_SMITHING_CONFIG } from '../generated/smithing-data'
 
 export const SMITHING_CONFIG: SmithingConfig = GENERATED_SMITHING_CONFIG
 
+function sortedBySortIndex<T extends { sortIndex: number }>(xs: T[]): T[] {
+  return [...xs].sort((a, b) => a.sortIndex - b.sortIndex)
+}
+
 export function sortedMaterials(config: SmithingConfig = SMITHING_CONFIG): MaterialDef[] {
-  return [...config.materials].sort((a, b) => a.sortIndex - b.sortIndex)
+  return sortedBySortIndex(config.materials)
 }
 
 export function sortedSources(config: SmithingConfig = SMITHING_CONFIG): SourceDef[] {
-  return [...config.sources].sort((a, b) => a.sortIndex - b.sortIndex)
+  return sortedBySortIndex(config.sources)
 }
 
 /** Предметы для источника и материала: только с заданным G в data_source. По подписи для UI (кириллица). */

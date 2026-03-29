@@ -7,37 +7,14 @@
  *
  * Опции: --stdout (только в консоль), --force (перезаписать существующий файл)
  */
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { parseBilingualSuffixLine, slugEn } from '../src/lib/smithingDataParse'
 import { SMITHING_DATA_FILES } from '../src/lib/buildSmithingDatasetFromDataSource'
+import { readUtf8OrThrow } from '../src/lib/readRepoUtf8'
+import { parseBilingualSuffixLine, resolveMaterialKeyEnFromQuery, slugEn } from '../src/lib/smithingDataParse'
 
 /** Как в готовых G_points: «English / Русский =123»; в шаблоне после «=» пусто. */
 const TEMPLATE_LINE_SUFFIX = ' ='
-
-function normalizeMaterialQuery(s: string): string {
-  return s.trim().replace(/\s+/g, ' ')
-}
-
-function findMaterialEnglishName(materialsText: string, query: string): string {
-  const q = normalizeMaterialQuery(query)
-  if (!q) {
-    throw new Error('Укажите английское имя материала, как в data_source/materials (например: Wrought Iron).')
-  }
-  const qLower = q.toLowerCase()
-  const qSlug = slugEn(q)
-  for (const raw of materialsText.split(/\r?\n/)) {
-    const line = raw.trim()
-    if (!line || line.startsWith('#')) continue
-    const m = line.match(/^(.+?)\s*\/\s*(.+)$/)
-    if (!m) continue
-    const left = m[1]!.trim()
-    if (left.toLowerCase() === qLower || slugEn(left) === qSlug) return left
-  }
-  throw new Error(
-    `Материал «${q}» не найден в data_source/${SMITHING_DATA_FILES.materials}. Укажите левую часть строки до « / », как в манифесте.`,
-  )
-}
 
 function buildTemplateLines(suffixText: string): string {
   const out: string[] = []
@@ -55,15 +32,6 @@ function buildTemplateLines(suffixText: string): string {
     }
   }
   return out.join('\n') + (out.length > 0 ? '\n' : '')
-}
-
-function readUtf8(path: string, label: string): string {
-  try {
-    return readFileSync(path, 'utf8')
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
-    throw new Error(`Не удалось прочитать «${label}» (${path}): ${msg}`)
-  }
 }
 
 function main() {
@@ -89,10 +57,10 @@ function main() {
   const materialsPath = resolve(ds, SMITHING_DATA_FILES.materials)
   const suffixPath = resolve(ds, SMITHING_DATA_FILES.suffix)
 
-  const materialsText = readUtf8(materialsPath, SMITHING_DATA_FILES.materials)
-  const suffixText = readUtf8(suffixPath, SMITHING_DATA_FILES.suffix)
+  const materialsText = readUtf8OrThrow(materialsPath, SMITHING_DATA_FILES.materials)
+  const suffixText = readUtf8OrThrow(suffixPath, SMITHING_DATA_FILES.suffix)
 
-  const materialEn = findMaterialEnglishName(materialsText, args[0] ?? '')
+  const materialEn = resolveMaterialKeyEnFromQuery(materialsText, args[0] ?? '')
   const slug = slugEn(materialEn)
   const fileName = `G_points - ${slug}.txt`
   const outPath = resolve(ds, fileName)

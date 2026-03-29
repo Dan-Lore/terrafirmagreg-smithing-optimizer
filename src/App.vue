@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import ForgeResultPanel from './components/ForgeResultPanel.vue'
 import { useForgeApp } from './composables/useForgeApp'
-import { DATA_SOURCE_DIR, NPM_GENERATE_SMITHING } from './lib/forgeUiCopy'
+import { DATA_SOURCE_DIR, FORGE_DATA_SOURCE_CLI, NPM_GENERATE_SMITHING } from './lib/forgeUiCopy'
 
 const {
   materials,
@@ -189,7 +189,7 @@ const titleWhenAnyToG = computed(() => (modeAnyToG.value ? TITLE_ANY_TO_G_FILTER
 
     <footer class="footer">
       <span class="muted">
-        Данные ковки: <code class="inlineHint">{{ DATA_SOURCE_DIR }}</code> → <code class="inlineHint">{{ NPM_GENERATE_SMITHING }}</code>
+        Данные ковки: <code class="inlineHint">{{ FORGE_DATA_SOURCE_CLI }}</code>
         · префикс — BFS в графе 0..150; таблица <code class="inlineHint">paths.ts</code> (после <code class="inlineHint">npm run precompute</code>) сверяется с BFS в тестах.
       </span>
     </footer>

@@ -1,53 +1,11 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { COMMANDS, MAX_G, MIN_G } from '../src/lib/commands'
+import { allShortestPathsFrom } from '../src/lib/pathfinding'
 
 type PathEntry = { steps: number; moves: number[] } | null
 
 function precomputeAllPaths(): PathEntry[] {
-  const size = MAX_G - MIN_G + 1
-  const dist = Array<number>(size).fill(Number.POSITIVE_INFINITY)
-  const prev = Array<number>(size).fill(-1)
-  const move = Array<number>(size).fill(0)
-
-  const q: number[] = []
-  dist[0] = 0
-  q.push(0)
-
-  for (let qi = 0; qi < q.length; qi++) {
-    const x = q[qi]!
-    const xDist = dist[x]!
-    for (const delta of COMMANDS) {
-      const y = x + delta
-      if (y < MIN_G || y > MAX_G) continue
-      if (dist[y] !== Number.POSITIVE_INFINITY) continue
-      dist[y] = xDist + 1
-      prev[y] = x
-      move[y] = delta
-      q.push(y)
-    }
-  }
-
-  const out: PathEntry[] = Array<PathEntry>(size).fill(null)
-  for (let g = MIN_G; g <= MAX_G; g++) {
-    if (dist[g] === Number.POSITIVE_INFINITY) {
-      out[g] = null
-      continue
-    }
-
-    const moves: number[] = []
-    let cur: number = g
-    while (cur !== 0) {
-      const d = move[cur]!
-      moves.push(d)
-      cur = prev[cur]!
-      if (cur < 0) break
-    }
-    moves.reverse()
-    out[g] = { steps: moves.length, moves }
-  }
-
-  return out
+  return allShortestPathsFrom(0).map((p) => (p === null ? null : { steps: p.steps, moves: p.moves }))
 }
 
 function renderTs(paths: PathEntry[]): string {
@@ -66,4 +24,3 @@ const paths = precomputeAllPaths()
 mkdirSync(resolve(process.cwd(), 'src', 'generated'), { recursive: true })
 writeFileSync(outputFile, renderTs(paths), 'utf8')
 console.log(`Generated ${outputFile}`)
-

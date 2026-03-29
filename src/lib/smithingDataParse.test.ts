@@ -6,6 +6,7 @@ import {
   parseMaterialsManifest,
   parseSectionedFile,
   parseSourcesManifest,
+  resolveMaterialKeyEnFromQuery,
   slugEn,
   splitBilingualLine,
   stableItemId,
@@ -38,11 +39,27 @@ describe('parseMaterialsManifest', () => {
     expect(rows).toEqual([
       {
         id: 'copper',
+        keyEn: 'Copper',
         sortIndex: 10,
         label: 'Медь',
         icon: '/icons/material-copper.svg',
       },
     ])
+  })
+})
+
+describe('resolveMaterialKeyEnFromQuery', () => {
+  const manifest = `Copper / Медь = public/icons/material-copper.svg
+Wrought Iron / Железо = public/icons/x.svg`
+
+  it('по точному английскому имени и по slug', () => {
+    expect(resolveMaterialKeyEnFromQuery(manifest, 'Copper')).toBe('Copper')
+    expect(resolveMaterialKeyEnFromQuery(manifest, 'copper')).toBe('Copper')
+    expect(resolveMaterialKeyEnFromQuery(manifest, 'wrought_iron')).toBe('Wrought Iron')
+  })
+
+  it('ошибка для неизвестного материала', () => {
+    expect(() => resolveMaterialKeyEnFromQuery(manifest, 'Gold')).toThrow(/не найден/)
   })
 })
 

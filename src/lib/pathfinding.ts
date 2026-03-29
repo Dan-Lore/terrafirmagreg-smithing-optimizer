@@ -2,6 +2,63 @@ import { COMMANDS, MAX_G, MIN_G } from './commands'
 
 export type PathResult = { steps: number; moves: number[] }
 
+type BfsTables = {
+  dist: number[]
+  prev: number[]
+  move: number[]
+}
+
+/**
+ * Один проход BFS от start. Если задан earlyStopGoal, останавливаемся при извлечении этой вершины из очереди
+ * (достаточно для кратчайшего пути start→goal).
+ */
+function runBfsFrom(start: number, earlyStopGoal?: number): BfsTables | null {
+  if (start < MIN_G || start > MAX_G) return null
+  const size = MAX_G - MIN_G + 1
+  const dist = Array<number>(size).fill(Number.POSITIVE_INFINITY)
+  const prev = Array<number>(size).fill(-1)
+  const move = Array<number>(size).fill(0)
+
+  const q: number[] = []
+  dist[start] = 0
+  q.push(start)
+
+  for (let qi = 0; qi < q.length; qi++) {
+    const x = q[qi]!
+    if (earlyStopGoal !== undefined && x === earlyStopGoal) {
+      return { dist, prev, move }
+    }
+    const xDist = dist[x]!
+    for (const delta of COMMANDS) {
+      const y = x + delta
+      if (y < MIN_G || y > MAX_G) continue
+      if (dist[y] !== Number.POSITIVE_INFINITY) continue
+      dist[y] = xDist + 1
+      prev[y] = x
+      move[y] = delta
+      q.push(y)
+    }
+  }
+  return { dist, prev, move }
+}
+
+function reconstructPath(tables: BfsTables, start: number, goal: number): PathResult | null {
+  if (goal < MIN_G || goal > MAX_G) return null
+  if (tables.dist[goal] === Number.POSITIVE_INFINITY) return null
+  if (start === goal) return { steps: 0, moves: [] }
+
+  const moves: number[] = []
+  let cur = goal
+  while (cur !== start) {
+    const d = tables.move[cur]!
+    moves.push(d)
+    cur = tables.prev[cur]!
+    if (cur < 0) break
+  }
+  moves.reverse()
+  return { steps: moves.length, moves }
+}
+
 /**
  * Состояние непосредственно перед применением суффикса (последовательность префикса заканчивается здесь).
  * Для целевой точки G и суффикса [d1..dk]: s0 + d1 + ... + dk = G ⇒ s0 = G с обратным вычитанием dk..d1.
@@ -41,43 +98,25 @@ export function validateFullMoves(startState: number, moves: number[]): boolean 
 export function shortestPath(start: number, goal: number): PathResult | null {
   if (start < MIN_G || start > MAX_G || goal < MIN_G || goal > MAX_G) return null
   if (start === goal) return { steps: 0, moves: [] }
+  const tables = runBfsFrom(start, goal)
+  if (!tables) return null
+  return reconstructPath(tables, start, goal)
+}
 
-  const size = MAX_G - MIN_G + 1
-  const dist = Array<number>(size).fill(Number.POSITIVE_INFINITY)
-  const prev = Array<number>(size).fill(-1)
-  const move = Array<number>(size).fill(0)
-
-  const q: number[] = []
-  dist[start] = 0
-  q.push(start)
-
-  for (let qi = 0; qi < q.length; qi++) {
-    const x = q[qi]!
-    const xDist = dist[x]!
-    if (x === goal) break
-    for (const delta of COMMANDS) {
-      const y = x + delta
-      if (y < MIN_G || y > MAX_G) continue
-      if (dist[y] !== Number.POSITIVE_INFINITY) continue
-      dist[y] = xDist + 1
-      prev[y] = x
-      move[y] = delta
-      q.push(y)
-    }
+/**
+ * Кратчайшие пути от start до каждой вершины 0..150 (для precompute-paths и согласованности с shortestPath).
+ */
+export function allShortestPathsFrom(start: number): (PathResult | null)[] {
+  if (start < MIN_G || start > MAX_G) {
+    return Array.from({ length: MAX_G - MIN_G + 1 }, () => null)
   }
-
-  if (dist[goal] === Number.POSITIVE_INFINITY) return null
-
-  const moves: number[] = []
-  let cur = goal
-  while (cur !== start) {
-    const d = move[cur]!
-    moves.push(d)
-    cur = prev[cur]!
-    if (cur < 0) break
+  const tables = runBfsFrom(start)
+  if (!tables) return Array.from({ length: MAX_G - MIN_G + 1 }, () => null)
+  const out: (PathResult | null)[] = []
+  for (let g = MIN_G; g <= MAX_G; g++) {
+    out.push(reconstructPath(tables, start, g))
   }
-  moves.reverse()
-  return { steps: moves.length, moves }
+  return out
 }
 
 export function concatMoves(prefix: number[], suffix: number[]): number[] {

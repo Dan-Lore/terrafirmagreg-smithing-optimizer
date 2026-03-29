@@ -14,6 +14,8 @@
 
 Расширение набора материалов и рецептов в **`data_source/`** (в т.ч. латунь, сталь, красный сплав, дополнения в **`materials_suffixes.txt`** и файлах **G_points**). После правок данных выполняется **`npm run generate-smithing`**; закоммиченный **`src/generated/smithing-data.ts`** должен совпадать со слиянием каталога (тест **`smithingDataSource.generatedSync`**).
 
+Рефакторинг (SOLID/DRY): единый BFS в **`pathfinding.ts`** (**`allShortestPathsFrom`**) для **`precompute-paths`**; общий **`readRepoUtf8`**; в манифесте материалов поле **`keyEn`** и **`resolveMaterialKeyEnFromQuery`** для шаблона G_points; **`getDataSourceDir`** в тестах; **`formatForgeMove`**, **`sortedBySortIndex`** в конфиге; **`FORGE_DATA_SOURCE_CLI`** в подсказках UI.
+
 ---
 
 ## 2.1.0 (2026-03-28)

@@ -13,6 +13,8 @@ export type SourceManifestRow = {
 
 export type MaterialManifestRow = {
   id: string
+  /** Английская часть строки манифеста (до « / »), как в data_source/materials */
+  keyEn: string
   sortIndex: number
   label: string
   /** Путь для UI, с ведущим слэшем, например /icons/material-copper.svg */
@@ -86,15 +88,36 @@ export function parseMaterialsManifest(text: string): MaterialManifestRow[] {
     if (!m) throw new Error(`materials:${lineNo}: после "/" ожидается "= путь к иконке", строка ${JSON.stringify(raw)}`)
     const label = m[1]!.trim()
     const icon = normalizeDataSourceIconPath(m[2]!)
-    const id = slugEn(bi.left)
+    const keyEn = bi.left.trim()
+    const id = slugEn(keyEn)
     if (!id) throw new Error(`materials:${lineNo}: пустой id после slug из "${bi.left}"`)
     order += 1
-    rows.push({ id, sortIndex: order * 10, label, icon })
+    rows.push({ id, keyEn, sortIndex: order * 10, label, icon })
   }
   if (rows.length === 0) throw new Error('materials: нет ни одной строки')
   const ids = new Set(rows.map((r) => r.id))
   if (ids.size !== rows.length) throw new Error('materials: повторяющийся материал (одинаковый английский ключ)')
   return rows
+}
+
+/**
+ * Английское имя материала из манифеста по запросу пользователя (регистр / slug).
+ */
+export function resolveMaterialKeyEnFromQuery(manifestText: string, query: string): string {
+  const q = query.trim().replace(/\s+/g, ' ')
+  if (!q) {
+    throw new Error('Укажите английское имя материала, как в data_source/materials (например: Wrought Iron).')
+  }
+  const rows = parseMaterialsManifest(manifestText)
+  const qLower = q.toLowerCase()
+  const qSlug = slugEn(q)
+  const hit = rows.find((r) => r.keyEn.toLowerCase() === qLower || r.id === qSlug)
+  if (!hit) {
+    throw new Error(
+      `Материал «${q}» не найден в data_source/materials. Укажите левую часть строки до « / », как в манифесте.`,
+    )
+  }
+  return hit.keyEn
 }
 
 export function splitBilingualLine(line: string): { left: string; right: string } | null {
