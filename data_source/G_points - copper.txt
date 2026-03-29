@@ -34,8 +34,8 @@ Double Ingot / Двойной слиток:
 Wrench Tip / Торцевая головка ключа = 98
 Mining Hammer Head / Оголовье шахтерского молота = 50
 Plate / Пластина = 43
-Scraper Knife / Оголовье ножа для соскребания = 96
-Spade / Оголовье заступа = 72
+Scraping Knife Head / Оголовье ножа для соскребания = 96
+Spade Head / Оголовье заступа = 72
 Wire Cutter Head / Насадка кусачек = 112
 Sword Head / Оголовье меча = 100
 Mace Head / Навершие булавы = 77

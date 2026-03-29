@@ -1,0 +1,25 @@
+Ingot / Слиток:
+Tongs Part / Часть клещей = 111
+Trapdoor / Люк = 60
+Nugget / Самородок = 87
+Gauze with Plate / Решётка с панелью = 56
+Small Gear / Маленькая шестерня = 40
+Gauze / Решётка = 96
+Bars / Прутья = 96
+Rod / Стержень = 89
+
+Rod / Стержень:
+Blowpipe / Трубка стеклодува = 89
+Ring / Кольцо = 91
+Bolt / Болт = 69
+Screw / Винт = 98
+
+Double Ingot / Двойной слиток:
+Gauze with Plate / Прутья с панелью = 91
+Plate / Пластина = 105
+Bars / Прутья = 56
+Unfinished Sextant / Незаконченный сетант = 85
+Gauze / Решётка = 86
+
+Plate / Пластина:
+Barometer / Барометр = 80

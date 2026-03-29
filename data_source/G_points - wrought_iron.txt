@@ -30,4 +30,22 @@ Bolt / Болт = 89
 Screw / Винт = 72
 
 Double Ingot / Двойной слиток:
+Oarlock / Держатель для весла = 104
+Wrench Tip / Торцевая головка ключа = 112
+Mining Hammer Head / Оголовье шахтерского молота = 58
+Bars with Plate / Прутья с панелью = 48
+Sword Head / Оголовье меча = 59
+Mace Head / Навершие булавы = 82
+Bars / Прутья = 102
+Plate / Пластина = 63
+Scraping Knife Head / Оголовье ножа для соскребания = 85
+Cannonball / Пушечное ядро = 79
+Spade Head / Оголовье заступа = 85
+Wire Cutter Head / Насадка кусачек = 48
 
+Plate / Пластина:
+Unfinished Boots / Недоделанные ботинки = 48
+Unfinished Flask / Недоделанная фляга = 98
+Pie Pan / Форма для выпечки пирога = 54
+Backle / Пряжка = 72
+Trapdoor / Люк = 109
