@@ -89,14 +89,14 @@ defineProps<{
           <div class="seqTitle">{{ model.outcome.mode === 'anyToG' ? 'Путь (минимум шагов)' : 'Префикс (минимум шагов)' }}</div>
           <code class="seqCode">
             <span v-if="model.outcome.prefixMoves.length === 0">— (пусто)</span>
-            <span v-else>{{ model.outcome.prefixMoves.map(model.formatMove).join(', ') }}</span>
+            <span v-else>{{ model.formatMoveSequence(model.outcome.prefixMoves) }}</span>
           </code>
         </div>
 
         <div v-if="model.outcome.mode !== 'anyToG'" class="sequence">
           <div class="seqTitle">Суффикс</div>
           <code class="seqCode suffix">
-            {{ model.outcome.suffix.map(model.formatMove).join(', ') }}
+            {{ model.formatMoveSequence(model.outcome.suffix) }}
           </code>
         </div>
 
@@ -104,7 +104,7 @@ defineProps<{
           <div class="seqTitle">Полная последовательность</div>
           <code class="seqCode">
             <span v-if="model.outcome.fullMoves.length === 0">—</span>
-            <span v-else>{{ model.outcome.fullMoves.map(model.formatMove).join(', ') }}</span>
+            <span v-else>{{ model.formatMoveSequence(model.outcome.fullMoves) }}</span>
           </code>
         </div>
       </template>

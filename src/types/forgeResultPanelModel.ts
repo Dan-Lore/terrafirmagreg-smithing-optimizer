@@ -8,7 +8,8 @@ export type ForgeResultPanelModel = {
   goalG: number | null
   suffix: number[] | null
   suffixFormatted: string | null
-  formatMove: (d: number) => string
+  /** Схлопывание повторов подряд: «+16 x 2, -3». */
+  formatMoveSequence: (moves: number[]) => string
   selection: {
     material: MaterialDef | undefined
     sourceId: SourceId
